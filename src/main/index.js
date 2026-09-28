@@ -1,4 +1,4 @@
-import { app, Tray, Menu, BrowserWindow, screen, globalShortcut, shell, ipcMain, nativeTheme, systemPreferences, desktopCapturer, autoUpdater, dialog } from 'electron';
+import { app, Tray, Menu, BrowserWindow, screen, globalShortcut, shell, ipcMain, nativeTheme, systemPreferences, desktopCapturer, autoUpdater, dialog, clipboard, ClipboardItem } from 'electron';
 import { updateElectronApp } from 'update-electron-app';
 import Store from 'electron-store';
 import { randomUUID } from 'crypto';
@@ -1415,7 +1415,17 @@ async function makeScreenshot() {
       savePath = path.join(screenshotDirectory, screenshotName)
     }
 
-    await fs.promises.writeFile(savePath, image.toPNG())
+    const png = image.toPNG()
+
+    mainWindow.webContents.send('screenshot_flash')
+
+    await fs.promises.writeFile(savePath, png)
+
+    try {
+      await clipboard.write([
+        new ClipboardItem({ 'image/png': new Blob([png], { type: 'image/png' }) }),
+      ])
+    } catch (_) {}
 
     sendNotification({
       title: `Click to open ${isMac ? 'in Finder' : 'folder'}`,

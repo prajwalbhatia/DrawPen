@@ -169,6 +169,7 @@ const Application = (settings) => {
   const [clearDrawingsOnHide, setClearDrawingsOnHide] = useState(initialClearDrawingsOnHide);
   const [mainColorIndex, setMainColorIndex] = useState(initialMainColorIndex);
   const [secondaryColorIndex, setSecondaryColorIndex] = useState(initialSecondaryColorIndex);
+  const [showScreenshotFlash, setShowScreenshotFlash] = useState(false);
   const [toastInfo, setToastInfo] = useState(null);
   const [fadeOpacity, setFadeOpacity] = useState(1.0);
 
@@ -178,6 +179,7 @@ const Application = (settings) => {
     window.electronAPI.onToggleWhiteboard(handleToggleWhiteboard);
     window.electronAPI.onRefreshSettings(handleRefreshSettings);
     window.electronAPI.onUpdateToolbarPosition(handleUpdateToolbarPosition);
+    window.electronAPI.onScreenshotFlash(handleScreenshotFlash);
     window.electronAPI.onShowNotification(handleShowNotification);
   }, []);
 
@@ -1547,6 +1549,16 @@ const Application = (settings) => {
     });
   };
 
+  const handleScreenshotFlash = () => {
+    console.log('Main -> Renderer: Show Screenshot Flash');
+
+    setShowScreenshotFlash(true);
+  };
+
+  const handleScreenshotFlashAnimationEnd = () => {
+    setShowScreenshotFlash(false);
+  };
+
   const handleShowNotification = (_, data) => {
     console.log('Main -> Renderer: Show Notification');
 
@@ -1680,6 +1692,14 @@ const Application = (settings) => {
 
   return (
     <div id="root_wrapper" className={manipulation} onPointerMove={handleMousePosition} onContextMenu={handleContextMenu}>
+
+      {
+        showScreenshotFlash &&
+          <div
+            className="screenshot-flash"
+            onAnimationEnd={handleScreenshotFlashAnimationEnd}
+          />
+      }
 
       {
         showWhiteboard &&
