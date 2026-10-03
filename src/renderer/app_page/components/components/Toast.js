@@ -1,9 +1,19 @@
 import React from 'react';
 import './Toast.scss';
 
-const Toast = ({ info, handleToastClicked }) => {
+const Toast = ({ info, handleToastClicked, handleToastHidden }) => {
+  const handleAnimationEnd = (event) => {
+    if (event.animationName !== 'toastHide') return;
+
+    handleToastHidden();
+  };
+
   return (
-    <div id="toast-block" key={`${info.title}-${info.body}`}>
+    <div
+      id="toast-block"
+      key={`${info.title}-${info.body}`}
+      onAnimationEnd={handleAnimationEnd}
+    >
       <img src="../assets/icon.png" alt='drawpen' className="toast-icon" />
 
       <div className="toast-main">

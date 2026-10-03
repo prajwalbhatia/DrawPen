@@ -1,0 +1,69 @@
+// Match the viewing layer's offsets so locking Zoom does not move the image.
+@mixin zoom-background-offset($axis, $viewport-size) {
+  --edge-area-#{$axis}: calc(#{$viewport-size} / var(--zoom-move-regions));
+  --default-offset-#{$axis}: calc(var(--cursor-#{$axis}) * (var(--background-zoom) - 1));
+  --start-edge-offset-#{$axis}: calc(var(--cursor-#{$axis}) * var(--background-zoom) - var(--edge-area-#{$axis}));
+  --end-edge-offset-#{$axis}: calc(var(--cursor-#{$axis}) * var(--background-zoom) + var(--edge-area-#{$axis}) - #{$viewport-size});
+
+  // Reveal the image boundaries before the cursor reaches the screen edge.
+  --edge-offset-#{$axis}: clamp(
+    var(--end-edge-offset-#{$axis}),
+    var(--default-offset-#{$axis}),
+    var(--start-edge-offset-#{$axis})
+  );
+
+  // Never pan beyond the image. At zoom 1, both offsets become zero.
+  --max-offset-#{$axis}: calc(#{$viewport-size} * (var(--background-zoom) - 1));
+  --image-offset-#{$axis}: clamp(0px, var(--edge-offset-#{$axis}), var(--max-offset-#{$axis}));
+}
+
+#zoom_background {
+  .zoom_background__image {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+
+    --zoom-move-regions: 4;
+
+    @include zoom-background-offset(x, 100vw);
+    @include zoom-background-offset(y, 100vh);
+
+    transform-origin: 0 0;
+    translate: calc(-1 * var(--image-offset-x)) calc(-1 * var(--image-offset-y));
+    scale: var(--background-zoom);
+  }
+
+  .zoom_background__hint {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+
+    display: flex;
+    max-width: 340px;
+    min-width: 100px;
+
+    background-color: var(--gray-100);
+    border: 1px solid var(--gray-500);
+    border-radius: 10px;
+    font-family: var(--font-primary);
+    color: var(--gray-700);
+    padding: 13px;
+
+    transform: translateX(-50%);
+    cursor: pointer;
+
+    .zoom_background__hint-main {
+      flex: 1;
+      text-align: center;
+
+      .zoom_background__hint-title {
+        font-size: 13px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+    }
+  }
+}

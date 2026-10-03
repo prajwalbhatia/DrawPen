@@ -27,6 +27,9 @@ export const eraserAlpha = 0.5;
 export const minWhiteboardWidth = 350;
 export const minWhiteboardHeight = 350;
 
+export const zoomLevels = [1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4];
+export const initialZoomIndex = 3;
+
 export const palmMinContactLength = 35; // Min touch contact length to detect a palm/fist
 export const palmMinContactArea = 2000;
 

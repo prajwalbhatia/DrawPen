@@ -27,6 +27,7 @@ const KEY_SHOW_HIDE_WHITEBOARD = 'CmdOrCtrl+E'
 const KEY_CLEAR_DESK           = 'CmdOrCtrl+K'
 const KEY_SETTINGS             = 'CmdOrCtrl+,'
 const KEY_MAKE_SCREENSHOT      = 'CmdOrCtrl+Shift+P'
+const KEY_START_ZOOM           = 'CmdOrCtrl+Shift+M'
 const KEY_Q                    = 'CmdOrCtrl+Q'
 const KEY_NULL                 = '[NULL]'
 
@@ -239,6 +240,8 @@ let settingsWindow
 let isQuitting = false
 let startAsHidden = false
 let drawingMode = false
+let zoomMode = false
+let zoomModeStarting = false
 
 let extendedToolbarPositionStoreTimeout = null
 
@@ -330,9 +333,14 @@ function updateContextMenu() {
     },
     { type: 'separator' },
     {
-      label: 'Capture Screen (Beta)',
+      label: withAccelHint('Capture Screen (Beta)', KEY_MAKE_SCREENSHOT),
       accelerator: accelForTray(KEY_MAKE_SCREENSHOT),
       click: makeScreenshot
+    },
+    {
+      label: withAccelHint(zoomMode ? 'Exit Zoom' : 'Zoom Screen (Beta)', KEY_START_ZOOM),
+      accelerator: accelForTray(KEY_START_ZOOM),
+      click: toggleZoomMode
     },
     { type: 'separator' },
     {
@@ -432,6 +440,12 @@ function createMainWindow() {
       event.preventDefault();
     }
   });
+  mainWindow.webContents.on('did-start-loading', () => {
+    zoomModeStarting = false
+    zoomMode = false
+
+    updateContextMenu()
+  })
 
   rawLog('Main Window:', currentDisplay.workArea)
 }
@@ -509,6 +523,8 @@ function createExtendedToolbarWindow() {
 }
 
 function showAboutWindow() {
+  if (zoomModeStarting) return
+
   withThrottle(() => {
     if (aboutWindow) {
       aboutWindow.focus();
@@ -575,6 +591,8 @@ function createAboutWindow() {
 }
 
 function showSettingsWindow() {
+  if (zoomModeStarting) return
+
   withThrottle(() => {
     if (settingsWindow) {
       settingsWindow.focus();
@@ -759,6 +777,7 @@ ipcMain.handle('get_settings', () => {
     key_binding_clear_desk:           normalizeAcceleratorForUI(store.get('key_binding_clear_desk')),
     key_binding_open_settings:        normalizeAcceleratorForUI(KEY_SETTINGS),
     key_binding_make_screenshot:      normalizeAcceleratorForUI(KEY_MAKE_SCREENSHOT),
+    key_binding_start_zoom:           normalizeAcceleratorForUI(KEY_START_ZOOM),
   };
 });
 
@@ -801,6 +820,31 @@ ipcMain.handle('open_settings', () => {
 
 ipcMain.handle('make_screenshot', () => {
   makeScreenshot()
+
+  return null
+});
+
+ipcMain.handle('request_zoom_start', () => {
+  startZoomMode()
+
+  return null
+});
+
+ipcMain.handle('capture_zoom_image', () => {
+  captureZoomImage()
+
+  return null
+});
+
+ipcMain.handle('reject_zoom_start', () => {
+  zoomModeStarting = false
+
+  return null
+});
+
+ipcMain.handle('exit_zoom', () => {
+  exitZoomMode()
+  updateContextMenu()
 
   return null
 });
@@ -944,6 +988,8 @@ ipcMain.handle('can_register_shortcut', async (_event, value) => {
     store.get('key_binding_show_hide_toolbar'),
     store.get('key_binding_show_hide_whiteboard'),
     store.get('key_binding_clear_desk'),
+    KEY_MAKE_SCREENSHOT,
+    KEY_START_ZOOM,
   ].filter(s => s && s !== KEY_NULL)
 
   if (shortcutsInUse.includes(accelerator)) {
@@ -1179,6 +1225,14 @@ function withThrottle(callback) {
 }
 
 function toggleDrawOrPointerMode() {
+  if (zoomModeStarting) return
+
+  if (zoomMode) {
+    exitZoomMode()
+    updateContextMenu()
+    return
+  }
+
   withThrottle(() => {
     rawLog('Toggling draw mode...')
 
@@ -1191,8 +1245,11 @@ function toggleDrawOrPointerMode() {
 }
 
 function enableDrawMode() {
+  if (zoomModeStarting) return
+
   rawLog('Enable drawing mode...')
 
+  exitZoomMode()
   flushExtendedToolbarPosition()
 
   showMainWindow()
@@ -1203,8 +1260,11 @@ function enableDrawMode() {
 }
 
 function enablePointerMode() {
+  if (zoomModeStarting) return
+
   rawLog('Enable pointer mode...')
 
+  exitZoomMode()
   resetScreenOnHide()
 
   showExtendedToolbarWindow()
@@ -1217,8 +1277,11 @@ function enablePointerMode() {
 }
 
 function hideApp() {
+  if (zoomModeStarting) return
+
   rawLog('Hiding app...')
 
+  exitZoomMode()
   resetScreenOnHide()
 
   hideWindow(mainWindow)
@@ -1275,6 +1338,8 @@ function toggleWhiteboard() {
 }
 
 function resetApp() {
+  if (zoomModeStarting) return
+
   withThrottle(() => {
     rawLog('Resetting app to original settings...')
 
@@ -1316,6 +1381,81 @@ function sendResetScreen() {
   mainWindow.webContents.send('reset_screen');
 }
 
+function toggleZoomMode() {
+  if (zoomMode) {
+    mainWindow.webContents.send('request_exit_zoom')
+    return
+  }
+
+  startZoomMode()
+}
+
+function startZoomMode() {
+  if (zoomMode || zoomModeStarting) return
+
+  if (!drawingMode) {
+    enableDrawMode()
+  }
+
+  zoomModeStarting = true
+  mainWindow.webContents.send('prepare_zoom_capture')
+}
+
+function getInitialZoomPoint() {
+  const cursor = screen.getCursorScreenPoint()
+  const windowBounds = mainWindow.getBounds()
+
+  return {
+    x: Math.max(0, Math.min(windowBounds.width, cursor.x - windowBounds.x)),
+    y: Math.max(0, Math.min(windowBounds.height, cursor.y - windowBounds.y)),
+  }
+}
+
+async function captureZoomImage() {
+  if (!zoomModeStarting) return
+
+  try {
+    const image = await captureMainWindowImage()
+
+    const imageDataUrl = image.toDataURL()
+    const initialZoomPoint = getInitialZoomPoint()
+
+    if (!zoomModeStarting) return
+
+    zoomModeStarting = false
+    zoomMode = true
+    updateContextMenu()
+
+    mainWindow.webContents.send('show_zoom', {
+      imageDataUrl: imageDataUrl,
+      initialZoomPoint: initialZoomPoint,
+    })
+  } catch (error) {
+    if (!zoomModeStarting && !zoomMode) return
+
+    zoomModeStarting = false
+    zoomMode = false
+    updateContextMenu()
+
+    mainWindow.webContents.send('stop_zoom')
+
+    sendNotification({
+      title: 'Zoom capture failed',
+      body: error.message,
+      button_label: isMac ? 'Settings' : null,
+      button_action: isMac ? 'open_security_preferences' : null,
+      button_data: null,
+    })
+  }
+}
+
+function exitZoomMode() {
+  if (!zoomMode) return
+
+  zoomMode = false
+  mainWindow.webContents.send('stop_zoom')
+}
+
 function quitApp() {
   withThrottle(() => {
     rawLog('Quitting app...')
@@ -1351,7 +1491,80 @@ function screenshotFilename(withUniqSuffix = false) {
   return `DRWPN-${yyyy}${mm}${dd}-${code}${suffix}.png`;
 }
 
+async function captureDisplayImage(display) {
+  if (isMac) {
+    const status = systemPreferences.getMediaAccessStatus('screen')
+
+    if (status !== 'granted') {
+      // NOTE: Adds an app to Screen & System Audio Recording list
+      try {
+        await desktopCapturer.getSources({
+          types: ['screen'],
+          thumbnailSize: { width: 1, height: 1 },
+        })
+      } catch (_) {}
+
+      throw new Error('Screen Recording permission is not granted.')
+    }
+  }
+
+  const thumbnailSize = {
+    width: Math.round(display.size.width * (display.scaleFactor || 1)),
+    height: Math.round(display.size.height * (display.scaleFactor || 1)),
+  }
+
+  const sources = await desktopCapturer.getSources({
+    types: ['screen'],
+    thumbnailSize,
+  })
+
+  if (sources.length === 0) {
+    throw new Error('No screen sources available for capture.')
+  }
+
+  const source =
+    sources.find(item => String(item.display_id ?? item.displayId ?? '') === String(display.id)) ||
+    sources.find(item => {
+      const { width, height } = item.thumbnail.getSize()
+      return width === thumbnailSize.width && height === thumbnailSize.height
+    }) ||
+    sources[0]
+
+  const image = source.thumbnail
+
+  if (!image || image.isEmpty()) {
+    throw new Error('Could not capture the screen.')
+  }
+
+  return image
+}
+
+async function captureMainWindowImage() {
+  const currentDisplay = getLockedMonitor() || getActiveMonitor() || getUnderCursorMonitor()
+  const image = await captureDisplayImage(currentDisplay)
+
+  const imageSize = image.getSize()
+  const windowBounds = mainWindow.getBounds()
+
+  const scale = imageSize.width / currentDisplay.bounds.width
+
+  const cropX = Math.round((windowBounds.x - currentDisplay.bounds.x) * scale)
+  const cropY = Math.round((windowBounds.y - currentDisplay.bounds.y) * scale)
+
+  const cropWidth  = Math.round(windowBounds.width * scale)
+  const cropHeight = Math.round(windowBounds.height * scale)
+
+  return image.crop({
+    x: cropX,
+    y: cropY,
+    width: cropWidth,
+    height: cropHeight,
+  })
+}
+
 async function makeScreenshot() {
+  if (zoomMode || zoomModeStarting) return
+
   if (!drawingMode) {
     enableDrawMode()
   }
@@ -1359,50 +1572,9 @@ async function makeScreenshot() {
   try {
     rawLog('Exporting as PNG...')
 
-    if (isMac) {
-      const status = systemPreferences.getMediaAccessStatus('screen');
-      if (status !== 'granted') {
-        // NOTE: Adds an app to Screen & System Audio Recording list
-        try {
-          await desktopCapturer.getSources({
-            types: ['screen'],
-            thumbnailSize: { width: 1, height: 1 },
-          });
-        } catch (_) {}
-
-        throw new Error('Screen Recording permission is not granted.');
-      }
-    }
-
-    const activeMonitor = getLockedMonitor() || getActiveMonitor() || getUnderCursorMonitor()
-
-    const thumbnailSize = {
-      width: Math.round(activeMonitor.size.width * (activeMonitor.scaleFactor || 1)),
-      height: Math.round(activeMonitor.size.height * (activeMonitor.scaleFactor || 1)),
-    };
-
-    const sources = await desktopCapturer.getSources({
-      types: ['screen'],
-      thumbnailSize,
-    });
-
-    if (sources.length === 0) {
-      throw new Error('No screen sources available for capture.')
-    }
-
-    const source =
-      sources.find(s => String(s.display_id ?? s.displayId ?? '') === String(activeMonitor.id)) ||
-      sources.find(source => {
-        const { width, height } = source.thumbnail.getSize()
-        return width === thumbnailSize.width && height === thumbnailSize.height
-      }) ||
-      sources[0];
-
-    const image = source.thumbnail;
-
-    if (!image || image.isEmpty()) {
-      throw new Error('Could not capture the screen.')
-    }
+    const currentDisplay = getLockedMonitor() || getActiveMonitor() || getUnderCursorMonitor()
+    const image = await captureDisplayImage(currentDisplay)
+    const imagePng = image.toPNG()
 
     const screenshotDirectory = store.get('screenshot_directory')
     await fs.promises.mkdir(screenshotDirectory, { recursive: true })
@@ -1415,15 +1587,13 @@ async function makeScreenshot() {
       savePath = path.join(screenshotDirectory, screenshotName)
     }
 
-    const png = image.toPNG()
-
     mainWindow.webContents.send('screenshot_flash')
 
-    await fs.promises.writeFile(savePath, png)
+    await fs.promises.writeFile(savePath, imagePng)
 
     try {
       await clipboard.write([
-        new ClipboardItem({ 'image/png': new Blob([png], { type: 'image/png' }) }),
+        new ClipboardItem({ 'image/png': new Blob([imagePng], { type: 'image/png' }) }),
       ])
     } catch (_) {}
 

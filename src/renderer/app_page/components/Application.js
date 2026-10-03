@@ -1,6 +1,6 @@
 import './Application.scss';
 
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { throttle, debounce } from 'lodash';
 import DrawDesk from './components/DrawDesk.js';
 import ToolBar from './components/ToolBar.js';
@@ -10,6 +10,8 @@ import RippleEffect from './components/RippleEffect.js';
 import Toast from './components/Toast.js';
 import TextEditor from './components/TextEditor.js';
 import Whiteboard from './components/Whiteboard.js';
+import ZoomLayer from './components/ZoomLayer.js';
+import ZoomBackground from './components/ZoomBackground.js';
 import {
   filterClosePoints,
   getMouseCoordinates,
@@ -56,6 +58,7 @@ import {
   pastCooldownMs,
   escDoubleTapMs,
   updateStoreDelay,
+  initialZoomIndex,
 } from './constants.js';
 
 const Icons = {
@@ -113,6 +116,7 @@ const Application = (settings) => {
   const key_clear_desk              = settings.key_binding_clear_desk
   const key_binding_open_settings   = settings.key_binding_open_settings
   const key_binding_make_screenshot = settings.key_binding_make_screenshot
+  const key_binding_start_zoom      = settings.key_binding_start_zoom
 
   let initialFigures = []
 
@@ -170,8 +174,14 @@ const Application = (settings) => {
   const [mainColorIndex, setMainColorIndex] = useState(initialMainColorIndex);
   const [secondaryColorIndex, setSecondaryColorIndex] = useState(initialSecondaryColorIndex);
   const [showScreenshotFlash, setShowScreenshotFlash] = useState(false);
+  const [zoomInfo, setZoomInfo] = useState({ status: 'inactive' }); // 'inactive', 'capturing', 'zooming', 'drawing', 'resuming', 'exiting'
   const [toastInfo, setToastInfo] = useState(null);
   const [fadeOpacity, setFadeOpacity] = useState(1.0);
+
+  const drawingInProgressRef = useRef(false);
+  useLayoutEffect(() => {
+    drawingInProgressRef.current = isDrawing || isActiveFigureMoving();
+  }, [isDrawing, activeFigureInfo]);
 
   useEffect(() => {
     window.electronAPI.onResetScreen(handleReset);
@@ -181,12 +191,37 @@ const Application = (settings) => {
     window.electronAPI.onUpdateToolbarPosition(handleUpdateToolbarPosition);
     window.electronAPI.onScreenshotFlash(handleScreenshotFlash);
     window.electronAPI.onShowNotification(handleShowNotification);
+    window.electronAPI.onPrepareZoomCapture(handlePrepareZoomCapture);
+    window.electronAPI.onShowZoom(handleShowZoom);
+    window.electronAPI.onRequestExitZoom(handleRequestExitZoom);
+    window.electronAPI.onStopZoom(handleStopZoom);
   }, []);
 
   const lastPasteAtRef = useRef(0);
   const lastEscapeAtRef = useRef(0);
+  const lastZoomShortcutAtRef = useRef(0);
+
+  useEffect(() => {
+    if (zoomInfo.status !== 'capturing') return;
+
+    // Capture only after a frame without drawings or UI has been rendered.
+    let frameId = requestAnimationFrame(() => {
+      frameId = requestAnimationFrame(() => {
+        window.electronAPI.invokeCaptureZoomImage();
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [zoomInfo.status]);
 
   const handleKeyDown = useCallback((event) => {
+    if (zoomInfo.status === 'capturing' || zoomInfo.status === 'exiting') {
+      event.preventDefault();
+      return;
+    }
+
     const eventKey = (event.key || '').toLowerCase();
     const eventCode = (event.code || '').toLowerCase();
     const ctrlOrMeta = event.ctrlKey || event.metaKey;
@@ -221,6 +256,16 @@ const Application = (settings) => {
       return
     }
 
+    if (eventMatches(event, key_binding_start_zoom)) {
+      event.preventDefault();
+      handleToggleZoom();
+      return
+    }
+
+    if (zoomInfo.status === 'zooming' || zoomInfo.status === 'resuming') {
+      return
+    }
+
     // Dynamic keyboard shortcuts
     if (eventMatches(event, key_show_hide_toolbar)) {
       event.preventDefault();
@@ -247,7 +292,6 @@ const Application = (settings) => {
       invokeMakeScreenshot();
       return
     }
-
     if (ctrlOrMeta && !['v', 'c', 'z'].includes(eventKey)) {
       return
     }
@@ -462,6 +506,12 @@ const Application = (settings) => {
           break;
         }
 
+        if (zoomInfo.status === 'drawing') {
+          event.preventDefault();
+          handleStartExitZoom();
+          break;
+        }
+
         const now = Date.now();
         if (now - lastEscapeAtRef.current < escDoubleTapMs) {
           lastEscapeAtRef.current = 0;
@@ -574,7 +624,7 @@ const Application = (settings) => {
         }
         break;
     }
-  }, [allFigures, undoStackFigures, redoStackFigures, clipboardFigure, isDrawing, activeFigureInfo, activeTool, activeColorIndex, activeWidthIndex, toolbarLastActiveBrush, toolbarLastActiveFigure, lastActivePen, lastActiveArrow, toolbarSlide, textEditorContainer, mouseCoordinates, mainColorIndex, secondaryColorIndex, colorList]);
+  }, [allFigures, undoStackFigures, redoStackFigures, clipboardFigure, isDrawing, activeFigureInfo, activeTool, activeColorIndex, activeWidthIndex, toolbarLastActiveBrush, toolbarLastActiveFigure, lastActivePen, lastActiveArrow, toolbarSlide, textEditorContainer, mouseCoordinates, mainColorIndex, secondaryColorIndex, colorList, zoomInfo]);
 
   const handleKeyUp = useCallback((event) => {
     const eventKey = (event.key || '').toLowerCase();
@@ -1442,7 +1492,13 @@ const Application = (settings) => {
   const handleContextMenu = (event) => {
     event.preventDefault();
 
-    setActiveFigureInfo(null);
+    if (isDrawing) return;
+    if (isActiveFigureMoving()) return;
+
+    if (activeFigureInfo) {
+      setActiveFigureInfo(null);
+      return;
+    }
 
     if (clearDrawingsOnHide) {
       handleReset();
@@ -1461,6 +1517,106 @@ const Application = (settings) => {
 
   const handleCloseToolBar = () => {
     invokeCloseApp();
+  }
+
+  const handleExitZoom = () => {
+    handleReset();
+    setZoomInfo({ status: 'inactive' });
+
+    invokeExitZoom();
+  }
+
+  const handleStartExitZoom = () => {
+    setZoomInfo((currentZoomInfo) => {
+      if (currentZoomInfo.status === 'zooming' || currentZoomInfo.status === 'drawing' || currentZoomInfo.status === 'resuming') {
+        return {
+          ...currentZoomInfo,
+          status: 'exiting',
+          animateEntry: false,
+        };
+      }
+
+      return currentZoomInfo;
+    });
+  };
+
+  const handleLockZoom = ({ zoomIndex, focusPoint }) => {
+    setMouseCoordinates(focusPoint);
+
+    setZoomInfo({
+      ...zoomInfo,
+      focusPoint: focusPoint,
+      resumeFocusPoint: null,
+      status: 'drawing',
+      zoomIndex: zoomIndex,
+      animateEntry: false,
+    });
+  };
+
+  const handleResumeZoom = (event) => {
+    event.preventDefault();
+
+    if (isDrawing) return;
+    if (isActiveFigureMoving()) return;
+
+    if (activeFigureInfo) {
+      setActiveFigureInfo(null);
+      return;
+    }
+
+    handleReset();
+
+    setZoomInfo({
+      ...zoomInfo,
+      resumeFocusPoint: getMouseCoordinates(event),
+      status: 'resuming',
+    });
+  };
+
+  const handleResumeZoomEnd = () => {
+    setZoomInfo((currentZoomInfo) => {
+      if (currentZoomInfo.status === 'resuming') {
+        return {
+          ...currentZoomInfo,
+          resumeFocusPoint: null,
+          status: 'zooming',
+        };
+      }
+
+      return currentZoomInfo;
+    });
+  };
+
+  const handleToggleZoom = () => {
+    const now = Date.now();
+
+    if (now - lastZoomShortcutAtRef.current < pastCooldownMs) return;
+    lastZoomShortcutAtRef.current = now;
+
+    if (zoomInfo.status === 'inactive') {
+      invokeRequestZoomStart();
+      return;
+    }
+
+    handleStartExitZoom();
+  }
+
+  const invokeRequestZoomStart = () => {
+    console.log('Renderer -> Main: Request Zoom Start');
+
+    window.electronAPI.invokeRequestZoomStart();
+  }
+
+  const invokeRejectZoomStart = () => {
+    console.log('Renderer -> Main: Invoke Reject Zoom Start');
+
+    window.electronAPI.invokeRejectZoomStart();
+  }
+
+  const invokeExitZoom = () => {
+    console.log('Renderer -> Main: Invoke Exit Zoom');
+
+    window.electronAPI.invokeExitZoom();
   }
 
   const invokeOpenSettings = () => {
@@ -1497,6 +1653,7 @@ const Application = (settings) => {
     console.log('Main -> Renderer: Handle Reset');
 
     setIsDrawing(false);
+    setIsFadeDrawing(false);
     setActiveFigureInfo(null);
     setAllFigures([]);
     setFadeFigures([]);
@@ -1508,6 +1665,8 @@ const Application = (settings) => {
     setUndoStackFigures([]);
     setRedoStackFigures([]);
     setClipboardFigure(null);
+    setShowScreenshotFlash(false);
+    setToastInfo(null);
   };
 
   const handleToggleToolbar = () => {
@@ -1522,7 +1681,7 @@ const Application = (settings) => {
     setShowWhiteboard((prevShowWhiteboard) => !prevShowWhiteboard);
   };
 
-  const handleRefreshSettings = (_, newSettings) => {
+  const handleRefreshSettings = (newSettings) => {
     console.log('Main -> Renderer: Refresh Settings');
 
     setColorList(createApplicationColorList(newSettings.tool_bar_color_palette));
@@ -1540,7 +1699,7 @@ const Application = (settings) => {
     setSecondaryColorIndex(newSettings.swap_colors_indexes[1]);
   };
 
-  const handleUpdateToolbarPosition = (_, newSettings) => {
+  const handleUpdateToolbarPosition = (newSettings) => {
     console.log('Main -> Renderer: Update Toolbar Position');
 
     setToolbarPosition({
@@ -1559,7 +1718,7 @@ const Application = (settings) => {
     setShowScreenshotFlash(false);
   };
 
-  const handleShowNotification = (_, data) => {
+  const handleShowNotification = (data) => {
     console.log('Main -> Renderer: Show Notification');
 
     setToastInfo({
@@ -1569,6 +1728,49 @@ const Application = (settings) => {
       button_action: data.button_action,
       button_data: data.button_data
     });
+  };
+
+  const handleShowZoom = (info) => {
+    console.log('Main -> Renderer: Show Zoom');
+
+    setShowScreenshotFlash(false);
+    setToastInfo(null);
+
+    setZoomInfo({
+      imageDataUrl: info.imageDataUrl,
+      focusPoint: info.initialZoomPoint,
+      status: 'zooming',
+      zoomIndex: initialZoomIndex,
+      animateEntry: true,
+    });
+  };
+
+  const handlePrepareZoomCapture = () => {
+    console.log('Main -> Renderer: Prepare Zoom Capture');
+
+    if (drawingInProgressRef.current) {
+      invokeRejectZoomStart();
+      return;
+    }
+
+    handleReset();
+
+    setZoomInfo({
+      status: 'capturing',
+    });
+  };
+
+  const handleRequestExitZoom = () => {
+    console.log('Main -> Renderer: Request Exit Zoom');
+
+    handleStartExitZoom();
+  };
+
+  const handleStopZoom = () => {
+    console.log('Main -> Renderer: Stop Zoom');
+
+    handleReset();
+    setZoomInfo({ status: 'inactive' });
   };
 
   const invokeSetSettings = (settings) => {
@@ -1620,6 +1822,10 @@ const Application = (settings) => {
       data: toastInfo.button_data,
     });
 
+    setToastInfo(null);
+  };
+
+  const handleToastHidden = () => {
     setToastInfo(null);
   };
 
@@ -1690,9 +1896,8 @@ const Application = (settings) => {
   const activeFigure = activeFigureInfo && findActiveFigure();
   const showSubToolbar = activeFigure && !isActiveFigureMoving();
 
-  return (
-    <div id="root_wrapper" className={manipulation} onPointerMove={handleMousePosition} onContextMenu={handleContextMenu}>
-
+  const drawingContent = (
+    <>
       {
         showScreenshotFlash &&
           <div
@@ -1702,7 +1907,7 @@ const Application = (settings) => {
       }
 
       {
-        showWhiteboard &&
+        zoomInfo.status === 'inactive' && showWhiteboard &&
         <Whiteboard
           theme={whiteboardTheme}
           layout={whiteboardLayout}
@@ -1718,7 +1923,7 @@ const Application = (settings) => {
       }
 
       {
-        showDrawingBorder &&
+        zoomInfo.status === 'inactive' && showDrawingBorder &&
         <div id="zone_borders"></div>
       }
 
@@ -1727,6 +1932,7 @@ const Application = (settings) => {
           <Toast
             info={toastInfo}
             handleToastClicked={handleToastClicked}
+            handleToastHidden={handleToastHidden}
           />
       }
 
@@ -1822,6 +2028,61 @@ const Application = (settings) => {
             colorList={colorList}
           />
       }
+    </>
+  );
+
+  if (zoomInfo.status === 'capturing') {
+    return <div id="root_wrapper" />;
+  }
+
+  if (zoomInfo.status === 'zooming' || zoomInfo.status === 'resuming' || zoomInfo.status === 'exiting') {
+    return (
+      <div id="root_wrapper">
+        <ZoomLayer
+          imageDataUrl={zoomInfo.imageDataUrl}
+          currentFocusPoint={zoomInfo.focusPoint}
+          resumeFocusPoint={zoomInfo.resumeFocusPoint}
+          currentZoomIndex={zoomInfo.zoomIndex}
+          animateEntry={zoomInfo.animateEntry}
+          isResuming={zoomInfo.status === 'resuming'}
+          isExiting={zoomInfo.status === 'exiting'}
+          onLockZoom={handleLockZoom}
+          onResumeZoomEnd={handleResumeZoomEnd}
+          onStartExitZoom={handleStartExitZoom}
+          onExitZoom={handleExitZoom}
+        />
+      </div>
+    );
+  }
+
+  if (zoomInfo.status === 'drawing') {
+    return (
+      <div
+        id="root_wrapper"
+        className={manipulation}
+        onPointerMove={handleMousePosition}
+        onContextMenu={handleResumeZoom}
+      >
+        <ZoomBackground
+          imageDataUrl={zoomInfo.imageDataUrl}
+          currentFocusPoint={zoomInfo.focusPoint}
+          currentZoomIndex={zoomInfo.zoomIndex}
+          onStartExitZoom={handleStartExitZoom}
+        />
+
+        {drawingContent}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      id="root_wrapper"
+      className={manipulation}
+      onPointerMove={handleMousePosition}
+      onContextMenu={handleContextMenu}
+    >
+      {drawingContent}
     </div>
   );
 };
