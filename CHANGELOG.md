@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.0.59] - 2026-10-11
+### Features:
+- Added Zoom Mode (Beta) via the Tray and CMD/CTRL+SHIFT+M
+
+### Improvements:
+- Added a flash effect when capturing screenshots
+- Added Screenshot and Zoom shortcut hints to the Linux Tray menu
+
+### Bug Fixes:
+- Prevented assigning Screenshot and Zoom shortcuts to other actions
+
 ## [0.0.58] - 2026-09-26
 ### Features:
 - Added a contextual toolbar for selected figures
