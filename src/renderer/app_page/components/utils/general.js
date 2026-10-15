@@ -338,9 +338,10 @@ export const calcPointsArrow = (points, widthIndex) => {
   const minTailSize = 1;
   const arrowSetup = [
     { max_scale_length: 70,  d1_y: 1, d2_y: 4,  d3_y: 18, d2_x: 17, d3_x: 20 },
-    { max_scale_length: 130, d1_y: 2, d2_y: 8,  d3_y: 34, d2_x: 31, d3_x: 36 },
-    { max_scale_length: 190, d1_y: 3, d2_y: 11, d3_y: 49, d2_x: 46, d3_x: 53 },
-    { max_scale_length: 250, d1_y: 4, d2_y: 15, d3_y: 65, d2_x: 60, d3_x: 70 },
+    { max_scale_length: 130, d1_y: 2, d2_y: 7,  d3_y: 30, d2_x: 28, d3_x: 33 },
+    { max_scale_length: 190, d1_y: 3, d2_y: 10, d3_y: 42, d2_x: 39, d3_x: 46 },
+    { max_scale_length: 250, d1_y: 4, d2_y: 13, d3_y: 54, d2_x: 50, d3_x: 59 },
+    { max_scale_length: 270, d1_y: 5, d2_y: 16, d3_y: 66, d2_x: 61, d3_x: 72 },
   ]
 
   const arrow = arrowSetup[widthIndex]
@@ -394,6 +395,7 @@ export const calcSegmentsFlatArrow = (points, widthIndex) => {
     { max_scale_length: 92,  max_head_len: 24, max_head_half: 11 },
     { max_scale_length: 121, max_head_len: 33, max_head_half: 15 },
     { max_scale_length: 150, max_head_len: 42, max_head_half: 19 },
+    { max_scale_length: 179, max_head_len: 51, max_head_half: 23 },
   ]
 
   const arrow = arrowSetup[widthIndex]
@@ -438,7 +440,7 @@ export const calcSegmentsFlatArrow = (points, widthIndex) => {
 export const isSmallArrowFigure = (points, widthIndex) => {
   const [startPoint, endPoint] = points;
 
-  const smallArrowLengths = [60, 80, 100, 120];
+  const smallArrowLengths = [60, 80, 100, 120, 140];
   const smallArrowLength = smallArrowLengths[widthIndex];
   const arrowLength = distanceBetweenPoints(startPoint, endPoint);
 
@@ -451,6 +453,7 @@ export const buildArrowArcSegments = (arrowPoints, widthIndex) => {
     { radius: 2, offset: 3 },
     { radius: 3, offset: 4 },
     { radius: 4, offset: 5 },
+    { radius: 5, offset: 6 },
   ];
 
   const moveTowards = (fromPoint, toPoint, distance) => {

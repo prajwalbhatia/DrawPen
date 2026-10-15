@@ -18,6 +18,7 @@ const CuteCursor = ({
   colorList,
   rainbowColorDeg,
   cuteCursorMode,
+  penStrokeWidthFixed,
 }) => {
   if (mouseCoordinates.x === 0 && mouseCoordinates.y === 0) {
     return null;
@@ -28,11 +29,12 @@ const CuteCursor = ({
 
     if (activeTool === 'highlighter') return widthInfo.highlighter_width;
     if (activeTool === 'laser') return widthInfo.laser_width[1];
-    if (activeTool === 'eraser') return widthInfo.figure_size;
-    if (shapeList.includes(activeTool)) return widthInfo.figure_size;
-    if (brushList.includes(activeTool) && colorList[activeColorIndex].isRainbow) return widthInfo.rainbow_pen_width;
+    if (activeTool === 'eraser') return widthInfo.pen_fixed_width;
+    if (shapeList.includes(activeTool)) return widthInfo.figure_width;
+    if (brushList.includes(activeTool) && colorList[activeColorIndex].isRainbow) return widthInfo.pen_fixed_width;
+    if (brushList.includes(activeTool) && penStrokeWidthFixed) return widthInfo.pen_fixed_width;
 
-    return widthInfo.pen_width;
+    return widthInfo.pen_pressure_width;
   };
 
   const getDotColor = () => {
@@ -103,8 +105,8 @@ const CuteCursor = ({
     }
   };
 
-  let xPosition = mouseCoordinates.x + 15;
-  let yPosition = mouseCoordinates.y - 25;
+  const xPosition = mouseCoordinates.x + 25;
+  const yPosition = mouseCoordinates.y - 25;
 
   const fadeClassName = cuteCursorMode === 'fade' ? 'fade' : '';
 

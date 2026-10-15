@@ -91,10 +91,11 @@
       transform: rotate(45deg);
     }
 
-    &.thin { div { width: 2px; }}
-    &.light { div { width: 3px; }}
-    &.medium { div { width: 5px; }}
-    &.bold { div { width: 6px; }}
+    &.thin { div { width: 1px; }}
+    &.light { div { width: 2px; }}
+    &.medium { div { width: 3px; }}
+    &.bold { div { width: 4px; }}
+    &.extra-bold { div { width: 5px; }}
   }
 
   .toolbar__color-picker {

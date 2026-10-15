@@ -103,10 +103,11 @@ export const createApplicationColorList = (colorPalette) => {
 
 export const lineHeightMultiplier = 1.25;
 export const widthList = [
-  { pen_width: 4,  highlighter_width: 8,  rainbow_pen_width: 3,  laser_width: [2,   5],  figure_size: 4,  icon_size: 14, name: 'thin',   title: 'Thin',   font_size: 20, font_y_offset_compensation: 4,   font_y_offset_compensation_retina: 4,   close_point_distance: 1 },
-  { pen_width: 8,  highlighter_width: 16, rainbow_pen_width: 4,  laser_width: [3,   8],  figure_size: 6,  icon_size: 16, name: 'light',  title: 'Light',  font_size: 28, font_y_offset_compensation: 5,   font_y_offset_compensation_retina: 5,   close_point_distance: 2 },
-  { pen_width: 12, highlighter_width: 24, rainbow_pen_width: 8,  laser_width: [4.5, 12], figure_size: 8,  icon_size: 18, name: 'medium', title: 'Medium', font_size: 42, font_y_offset_compensation: 6.5, font_y_offset_compensation_retina: 7.5, close_point_distance: 3 },
-  { pen_width: 16, highlighter_width: 32, rainbow_pen_width: 12, laser_width: [6,   16], figure_size: 10, icon_size: 20, name: 'bold',   title: 'Bold',   font_size: 56, font_y_offset_compensation: 9.5, font_y_offset_compensation_retina: 9.5, close_point_distance: 4 },
+  { pen_fixed_width: 2,  pen_pressure_width: 2,  figure_width: 2,  highlighter_width: 10, laser_width: [2,   6],  icon_size: 14, name: 'thin',       title: 'Thin',       font_size: 20, font_y_offset_compensation: 4,   font_y_offset_compensation_retina: 3.5, close_point_distance: 1 },
+  { pen_fixed_width: 4,  pen_pressure_width: 5,  figure_width: 4,  highlighter_width: 18, laser_width: [3,   8],  icon_size: 16, name: 'light',      title: 'Light',      font_size: 28, font_y_offset_compensation: 5,   font_y_offset_compensation_retina: 5,   close_point_distance: 2 },
+  { pen_fixed_width: 6,  pen_pressure_width: 8,  figure_width: 6,  highlighter_width: 26, laser_width: [4,   10], icon_size: 18, name: 'medium',     title: 'Medium',     font_size: 42, font_y_offset_compensation: 6.5, font_y_offset_compensation_retina: 7.5, close_point_distance: 3 },
+  { pen_fixed_width: 8, pen_pressure_width:  11, figure_width: 8,  highlighter_width: 34, laser_width: [5,   12], icon_size: 20, name: 'bold',       title: 'Bold',       font_size: 56, font_y_offset_compensation: 9.5, font_y_offset_compensation_retina: 9.5, close_point_distance: 4 },
+  { pen_fixed_width: 10, pen_pressure_width: 14, figure_width: 10, highlighter_width: 42, laser_width: [6,   16], icon_size: 22, name: 'extra-bold', title: 'Extra Bold', font_size: 70, font_y_offset_compensation: 12,  font_y_offset_compensation_retina: 12,  close_point_distance: 5 },
 ]
 
 export const erasedFigureColor = '#D3D3D3'; // lightgray

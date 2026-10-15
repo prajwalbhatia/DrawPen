@@ -187,7 +187,7 @@ const isOnLine = (x, y, figure) => {
   const { points, widthIndex } = figure
 
   const baseTolerance = 5;
-  const tolerance = baseTolerance + widthList[widthIndex].figure_size / 2
+  const tolerance = baseTolerance + widthList[widthIndex].figure_width / 2
 
   return isOnCurve(x, y, points, tolerance)
 }
@@ -232,7 +232,7 @@ const isOnFlatArrow = (x, y, figure) => {
   const { points, widthIndex } = figure
 
   const baseTolerance = 5;
-  const tolerance = baseTolerance + widthList[widthIndex].figure_size / 2
+  const tolerance = baseTolerance + widthList[widthIndex].figure_width / 2
 
   const [shaftSegment, headTopSegment, headBottomSegment] = calcSegmentsFlatArrow(points, widthIndex)
 
@@ -282,7 +282,7 @@ const isOnRectangle = (x, y, figure) => {
   const { widthIndex } = figure
 
   const baseTolerance = 5;
-  const tolerance = baseTolerance + widthList[widthIndex].figure_size / 2
+  const tolerance = baseTolerance + widthList[widthIndex].figure_width / 2
 
   const rectanglePoints = getRectanglePoints(figure);
 
@@ -291,7 +291,7 @@ const isOnRectangle = (x, y, figure) => {
 
 const isOnDiamond = (x, y, figure) => {
   const baseTolerance = 5;
-  const tolerance = baseTolerance + widthList[figure.widthIndex].figure_size / 2;
+  const tolerance = baseTolerance + widthList[figure.widthIndex].figure_width / 2;
 
   const diamondPoints = getDiamondPoints(figure);
 

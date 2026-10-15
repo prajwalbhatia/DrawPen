@@ -103,7 +103,7 @@ const detectColorAndWidth = (ctx, figure, updateRainbowColorDeg, colorList) => {
   const { points: [pointA, pointB], colorIndex, widthIndex, rainbowColorDeg, erased } = figure
 
   let color = colorList[colorIndex].color
-  const width = widthList[widthIndex].figure_size
+  const width = widthList[widthIndex].figure_width
 
   if (colorList[colorIndex].isRainbow) {
     color = createGradient(ctx, pointA, pointB, rainbowColorDeg, updateRainbowColorDeg)
@@ -167,11 +167,11 @@ export const drawPen = (ctx, figure, colorList, options = {}) => {
   }
 
   const strokeOptions = {
-    size: widthInfo.pen_width
+    size: widthInfo.pen_pressure_width
   };
 
   if (penStrokeWidthFixed) {
-    strokeOptions.size = widthInfo.figure_size; // Trick to keep the pen size consistent
+    strokeOptions.size = widthInfo.pen_fixed_width; // Trick to keep the pen size consistent
     strokeOptions.simulatePressure = false;
     strokeOptions.thinning = 0.0;
   }
@@ -190,7 +190,7 @@ export const drawRainbowPen = (ctx, offscreenCanvas, figure, updateRainbowColorD
 
   const widthInfo = widthList[widthIndex]
 
-  drawLazyRainbowLine(offCtx, figure, updateRainbowColorDeg, widthInfo.rainbow_pen_width)
+  drawLazyRainbowLine(offCtx, figure, updateRainbowColorDeg, widthInfo.pen_fixed_width)
 
   let alpha = fadeOpacity;
 
@@ -582,7 +582,7 @@ export const drawLaser = (ctx, figure) => {
 
 export const drawEraserTail = (ctx, figure) => {
   const { points, widthIndex } = figure
-  const width = widthList[widthIndex].figure_size
+  const width = widthList[widthIndex].pen_fixed_width
 
   const path2DData = getPerfectPath2D(points, {
     size: width,

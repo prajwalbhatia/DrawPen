@@ -1964,6 +1964,7 @@ const Application = (settings) => {
             colorList={colorList}
             rainbowColorDeg={rainbowColorDeg}
             cuteCursorMode={cuteCursorMode}
+            penStrokeWidthFixed={penStrokeWidthFixed}
           />
       }
 
