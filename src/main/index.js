@@ -32,8 +32,19 @@ const KEY_Q                    = 'CmdOrCtrl+Q'
 const KEY_NULL                 = '[NULL]'
 
 const EXTENDED_TOOLBAR_WINDOW_MARGIN = 10
-const EXTENDED_TOOLBAR_WINDOW_WIDTH  = EXTENDED_TOOLBAR_WINDOW_MARGIN+80+17+5
-const EXTENDED_TOOLBAR_WINDOW_HEIGHT = EXTENDED_TOOLBAR_WINDOW_MARGIN+70+5
+const EXTENDED_TOOLBAR_WINDOW_PADDING = 5
+const EXTENDED_TOOLBAR_MODE_SWITCHER_WIDTH = 80
+const EXTENDED_TOOLBAR_MODE_SWITCHER_HEIGHT = 72
+const EXTENDED_TOOLBAR_SLIDER_SIZE = 17
+
+const EXTENDED_TOOLBAR_HORIZONTAL_WINDOW_SIZE = {
+  width: EXTENDED_TOOLBAR_WINDOW_MARGIN + EXTENDED_TOOLBAR_MODE_SWITCHER_WIDTH + EXTENDED_TOOLBAR_SLIDER_SIZE + EXTENDED_TOOLBAR_WINDOW_PADDING,
+  height: EXTENDED_TOOLBAR_WINDOW_MARGIN + EXTENDED_TOOLBAR_MODE_SWITCHER_HEIGHT + EXTENDED_TOOLBAR_WINDOW_PADDING,
+}
+const EXTENDED_TOOLBAR_VERTICAL_WINDOW_SIZE = {
+  width: EXTENDED_TOOLBAR_WINDOW_MARGIN + EXTENDED_TOOLBAR_MODE_SWITCHER_WIDTH + EXTENDED_TOOLBAR_WINDOW_PADDING,
+  height: EXTENDED_TOOLBAR_WINDOW_MARGIN + EXTENDED_TOOLBAR_MODE_SWITCHER_HEIGHT + EXTENDED_TOOLBAR_SLIDER_SIZE + EXTENDED_TOOLBAR_WINDOW_PADDING,
+}
 
 let lastShortcutTime = 0;
 const throttleDelay = 250;
@@ -80,6 +91,11 @@ const schema = {
   disable_toolbar_in_pointer_mode: {
     type: 'boolean',
     default: false
+  },
+  tool_bar_orientation: {
+    type: 'string',
+    enum: ['horizontal', 'vertical'],
+    default: 'horizontal'
   },
   tool_bar_x: {
     type: 'number',
@@ -455,8 +471,7 @@ function createExtendedToolbarWindow() {
 
   extendedToolbarWindow = new BrowserWindow({
     show: false,
-    width: EXTENDED_TOOLBAR_WINDOW_WIDTH,
-    height: EXTENDED_TOOLBAR_WINDOW_HEIGHT,
+    ...getExtendedToolbarWindowSize(),
     transparent: true,
     backgroundColor: '#00000000', // 8-symbol ARGB
     resizable: false,
@@ -504,7 +519,7 @@ function createExtendedToolbarWindow() {
     scheduleStoreToolbarPositionFromExtendedWindow()
   })
 
-  extendedToolbarWindow.webContents.on('did-finish-load', () => {
+  extendedToolbarWindow.webContents.once('did-finish-load', () => {
     if (startAsHidden) return;
 
     enablePointerMode()
@@ -749,6 +764,7 @@ ipcMain.handle('get_settings', () => {
     whiteboard_style: store.get('whiteboard_style'),
     whiteboard_spacing: store.get('whiteboard_spacing'),
     show_tool_bar: store.get('show_tool_bar'),
+    tool_bar_orientation: store.get('tool_bar_orientation'),
     show_drawing_border: store.get('show_drawing_border'),
     cute_cursor_mode: store.get('cute_cursor_mode'),
     pen_smoothing: store.get('pen_smoothing'),
@@ -877,6 +893,14 @@ ipcMain.handle('reset_to_originals', () => {
   return null
 });
 
+ipcMain.handle('get_extended_window_configuration', () => {
+  rawLog('Getting extended window configuration...')
+
+  return {
+    tool_bar_orientation: store.get('tool_bar_orientation'),
+  };
+});
+
 ipcMain.handle('get_configuration', () => {
   rawLog('Getting configuration...')
 
@@ -899,6 +923,7 @@ ipcMain.handle('get_configuration', () => {
     starts_hidden:                            store.get('starts_hidden'),
     clear_drawings_on_hide:                   store.get('clear_drawings_on_hide'),
     disable_toolbar_in_pointer_mode:          store.get('disable_toolbar_in_pointer_mode'),
+    tool_bar_orientation:                     store.get('tool_bar_orientation'),
 
     screenshot_directory:                     store.get('screenshot_directory'),
     screenshot_directory_is_default:          store.get('screenshot_directory') === schema.screenshot_directory.default,
@@ -1161,6 +1186,20 @@ ipcMain.handle('set_disable_toolbar_in_pointer_mode', (_event, value) => {
   return null
 });
 
+ipcMain.handle('set_toolbar_orientation', (_event, value) => {
+  rawLog('Setting toolbar orientation:', value)
+
+  store.set('tool_bar_orientation', value)
+
+  const { width, height } = getExtendedToolbarWindowSize()
+  extendedToolbarWindow.setSize(width, height)
+
+  mainWindow.reload()
+  extendedToolbarWindow.reload()
+
+  return null
+});
+
 function refreshSettingsInRenderer() {
   mainWindow.webContents.send('refresh_settings', {
     whiteboard_color:        store.get('whiteboard_color'),
@@ -1344,9 +1383,13 @@ function resetApp() {
 
     tray.setImage(getTrayIconPath())
 
+    const { width, height } = getExtendedToolbarWindowSize()
+    extendedToolbarWindow.setSize(width, height)
+
     enablePointerMode()
 
     mainWindow.reload()
+    extendedToolbarWindow.reload()
 
     if (settingsWindow) {
       settingsWindow.reload()
@@ -1727,6 +1770,14 @@ function showExtendedToolbarWindow() {
   updateExtendedToolbarWindowPosition(currentDisplay)
 
   showWindow(extendedToolbarWindow, { inactive: true })
+}
+
+function getExtendedToolbarWindowSize() {
+  if (store.get('tool_bar_orientation') === 'vertical') {
+    return EXTENDED_TOOLBAR_VERTICAL_WINDOW_SIZE
+  }
+
+  return EXTENDED_TOOLBAR_HORIZONTAL_WINDOW_SIZE
 }
 
 function updateExtendedToolbarWindowPosition(display) {

@@ -23,6 +23,7 @@ const humanizedShortcut = (shortcut) => {
 };
 
 const ToolBar = ({
+  orientation,
   position,
   setPosition,
   toolbarSlide,
@@ -370,7 +371,12 @@ const ToolBar = ({
     <aside
       id="toolbar"
       ref={toolbarRef}
-      className={`${toolbarSlide}${isCollapsed ? " toolbar--collapsed" : ""}${areShortcutHintsVisible ? " toolbar--shortcut-hints-visible" : ""}`}
+      className={`
+        toolbar--${orientation}
+        ${toolbarSlide}
+        ${isCollapsed ? "toolbar--collapsed" : ""}
+        ${areShortcutHintsVisible ? "toolbar--shortcut-hints-visible" : ""}
+      `}
       style={{ left: position.x, top: position.y }}
     >
       <div className="toolbar__mode-switcher">

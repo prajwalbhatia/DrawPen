@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Renderer -> Main
   invokeCloseApp: () => ipcRenderer.invoke('close_app'),
   invokeDrawMode: () => ipcRenderer.invoke('toggle_draw_or_pointer_window'),
+  getConfiguration: () => ipcRenderer.invoke('get_extended_window_configuration'),
 });

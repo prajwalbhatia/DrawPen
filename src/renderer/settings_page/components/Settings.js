@@ -64,6 +64,7 @@ const Settings = (config) => {
   const [startsHidden, setStartsHidden] = useState(config.starts_hidden);
   const [clearDrawingsOnHide, setClearDrawingsOnHide] = useState(config.clear_drawings_on_hide);
   const [disableToolbarInPointerMode, setDisableToolbarInPointerMode] = useState(config.disable_toolbar_in_pointer_mode);
+  const [toolbarOrientation, setToolbarOrientation] = useState(config.tool_bar_orientation);
   const [screenshotDirectory, setScreenshotDirectory] = useState({ path: config.screenshot_directory, isDefault: config.screenshot_directory_is_default });
 
   const [showHideApp, setShowHideApp]               = useState({ accelerator: config.key_binding_show_hide_app,        init: config.key_binding_show_hide_app_default });
@@ -217,6 +218,13 @@ const Settings = (config) => {
     setAppIconColor(iconColor);
 
     window.electronAPI.setAppIconColor(iconColor);
+  }
+
+  const selectToolbarOrientation = (event) => {
+    const orientation = event.target.value;
+    setToolbarOrientation(orientation);
+
+    window.electronAPI.setToolbarOrientation(orientation);
   }
 
   const applyLaserTime = (value) => {
@@ -638,6 +646,29 @@ const Settings = (config) => {
                         <option value="default">Default</option>
                         <option value="white">White</option>
                         <option value="black">Black</option>
+                      </select>
+
+                      <div className="selectbar-arrow">
+                        <IoChevronDown className="icon" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-item">
+                  <div className="settings-item-info">
+                    <div className="settings-item-title">Toolbar Orientation</div>
+                  </div>
+
+                  <div className="settings-item-control">
+                    <div className="selectbar-container">
+                      <select
+                        className="selectbar"
+                        value={toolbarOrientation}
+                        onChange={selectToolbarOrientation}
+                      >
+                        <option value="horizontal">Horizontal</option>
+                        <option value="vertical">Vertical</option>
                       </select>
 
                       <div className="selectbar-arrow">

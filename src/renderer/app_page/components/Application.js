@@ -102,6 +102,7 @@ const Application = (settings) => {
   const initialClearDrawingsOnHide = settings.clear_drawings_on_hide
   const initialToolbarDefaultBrush = settings.tool_bar_default_brush
   const initialToolbarDefaultFigure = settings.tool_bar_default_figure
+  const initialToolbarOrientation = settings.tool_bar_orientation
   const initialToolbarCollapsed = settings.tool_bar_collapsed
   const initialToolbarPosition = { x: settings.tool_bar_x, y: settings.tool_bar_y }
   const [initialMainColorIndex, initialSecondaryColorIndex] = settings.swap_colors_indexes
@@ -2005,6 +2006,7 @@ const Application = (settings) => {
       {
         showToolbar &&
           <ToolBar
+            orientation={initialToolbarOrientation}
             position={toolbarPosition}
             setPosition={setToolbarPosition}
             toolbarSlide={toolbarSlide}

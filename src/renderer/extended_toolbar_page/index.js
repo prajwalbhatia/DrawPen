@@ -13,3 +13,7 @@ switchToDrawButtons.forEach(button => {
     window.electronAPI.invokeDrawMode();
   });
 });
+
+window.electronAPI.getConfiguration().then((config) => {
+  toolbar.classList.add(`toolbar--${config.tool_bar_orientation}`);
+});

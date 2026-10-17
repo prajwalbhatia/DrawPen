@@ -9,7 +9,7 @@
 
         --toolbar-background-color: #FFFFFF;
         --toolbar-border-color: #020202;
-        --toolbar-height: 44px;
+        --toolbar-thickness: 44px;
       }
 
       html,
@@ -119,23 +119,43 @@
       }
 
       .toolbar__slider {
-        height: var(--toolbar-height);
         display: flex;
         align-self: center;
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
         border: 1px solid var(--toolbar-border-color);
-        border-top-right-radius: 10px;
-        border-bottom-right-radius: 10px;
         background-color: var(--toolbar-background-color);
         cursor: pointer;
-        border-left: 0;
       }
 
       .toolbar__slider svg {
         width: 16px;
         height: 16px;
+      }
+
+      .toolbar--horizontal {
+        flex-direction: row;
+      }
+
+      .toolbar--horizontal .toolbar__slider {
+        height: var(--toolbar-thickness);
+        border-left: 0;
+        border-radius: 0 10px 10px 0;
+      }
+
+      .toolbar--vertical {
+        flex-direction: column;
+      }
+
+      .toolbar--vertical .toolbar__slider {
+        width: var(--toolbar-thickness);
+        border-top: 0;
+        border-radius: 0 0 10px 10px;
+      }
+
+      .toolbar--vertical .toolbar__slider svg {
+        rotate: 90deg;
       }
     </style>
   </head>

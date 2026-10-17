@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setToolbarColor: (colorId, value) => ipcRenderer.invoke('set_toolbar_color', colorId, value),
   setDrawingMonitor: (value) => ipcRenderer.invoke('set_drawing_monitor', value),
   setDisableToolbarInPointerMode: (value) => ipcRenderer.invoke('set_disable_toolbar_in_pointer_mode', value),
+  setToolbarOrientation: (value) => ipcRenderer.invoke('set_toolbar_orientation', value),
   setFadeDisappearAfterMs: (value) => ipcRenderer.invoke('set_fade_disappear_after_ms', value),
   setFadeOutDurationTimeMs: (value) => ipcRenderer.invoke('set_fade_out_duration_time_ms', value),
   chooseScreenshotDirectory: () => ipcRenderer.invoke('choose_screenshot_directory'),
