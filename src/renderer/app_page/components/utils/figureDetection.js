@@ -640,9 +640,10 @@ const isSegmentTouchDiamond = (segmentPoints, figure) => {
 
 export const areFiguresIntersecting = (eraserFigure, figure) => {
   switch (figure.type) {
+    case 'brush':
     case 'pen':
-    case 'highlighter':
     case 'fadepen':
+    case 'highlighter':
       return isSegmentTouchCurve(eraserFigure.points, figure)
     case 'arrow':
       return isSegmentTouchArrow(eraserFigure.points, figure)

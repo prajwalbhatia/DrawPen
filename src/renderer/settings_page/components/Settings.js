@@ -56,7 +56,6 @@ const Settings = (config) => {
   const [showDrawingBorder, setShowDrawingBorder] = useState(config.show_drawing_border);
   const [cuteCursorMode, setCuteCursorMode] = useState(config.cute_cursor_mode);
   const [penSmoothing, setPenSmoothing] = useState(config.pen_smoothing);
-  const [penStrokeWidthFixed, setPenStrokeWidthFixed] = useState(config.pen_stroke_width_fixed);
   const [appIconColor, setAppIconColor] = useState(config.app_icon_color);
   const [fadeDisappearAfterMs, setFadeDisappearAfterMs] = useState(config.fade_disappear_after_ms);
   const [fadeOutDurationTimeMs, setFadeOutDurationTimeMs] = useState(config.fade_out_duration_time_ms);
@@ -183,13 +182,6 @@ const Settings = (config) => {
     setPenSmoothing(nextState);
 
     window.electronAPI.setPenSmoothing(nextState);
-  };
-
-  const togglePenStrokeWidthFixed = () => {
-    const nextState = !penStrokeWidthFixed;
-    setPenStrokeWidthFixed(nextState);
-
-    window.electronAPI.setPenStrokeWidthFixed(nextState);
   };
 
   const toggleLaunch = () => {
@@ -529,27 +521,14 @@ const Settings = (config) => {
 
                 <div className="settings-item">
                   <div className="settings-item-info">
-                    <div className="settings-item-title">Smooth Pen Strokes</div>
+                    <div className="settings-item-title">Smooth Strokes</div>
+                    <div className="settings-item-description">Filters out tiny movements after drawing</div>
                   </div>
 
                   <div className="settings-item-control">
                     <div
                       className={`toggle ${penSmoothing ? 'active' : ''}`}
                       onClick={togglePenSmoothing}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="settings-item">
-                  <div className="settings-item-info">
-                    <div className="settings-item-title">Fixed Stroke Width</div>
-                    <div className="settings-item-description">Keep stroke width independent of drawing speed</div>
-                  </div>
-
-                  <div className="settings-item-control">
-                    <div
-                      className={`toggle ${penStrokeWidthFixed ? 'active' : ''}`}
-                      onClick={togglePenStrokeWidthFixed}
                     ></div>
                   </div>
                 </div>
@@ -731,7 +710,7 @@ const Settings = (config) => {
                   </div>
                 </div>
 
-                <div className="settings-item settings-item--screenshot-directory">
+                <div className="settings-item">
                   <div className="settings-item-info">
                     <div className="settings-item-title">Save screenshots to</div>
                     <div className="settings-item-description" title={screenshotDirectory.path}>{screenshotDirectory.path}</div>

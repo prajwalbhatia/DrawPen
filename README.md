@@ -50,22 +50,22 @@ On some Linux setups running **Wayland** (e.g. [Fedora KDE Plasma](https://githu
 
 ### Keybindings
 
-| Command                                 | Keybindings                                                  | Comment |
-| --------------------------------------- | ------------------------------------------------------------ | - |
-| Enable Draw/Pointer Mode                | <kbd>CMD/CTRL + SHIFT + A</kbd> | Global shortcut |
-| Activate Pen                            | <kbd>P</kbd> or <kbd>1</kbd> | |
-| Activate/Switch Shapes (Arrow/Square/etc.)   | <kbd>A</kbd>, <kbd>R</kbd>, <kbd>O</kbd> or <kbd>2</kbd> | |
-| Activate Text                           | <kbd>T</kbd> or <kbd>3</kbd> | |
-| Activate Highlighter                    | <kbd>H</kbd> or <kbd>4</kbd> | |
-| Activate Laser                          | <kbd>L</kbd> or <kbd>5</kbd> | |
-| Activate Eraser                         | <kbd>E</kbd> or <kbd>6</kbd> | |
-| Switch Color                            | <kbd>7</kbd> | |
-| Switch Thickness (Width)                | <kbd>8</kbd> | |
-| Show/Hide ToolBar                       | <kbd>CMD/CTRL + T</kbd> | In-app shortcut |
-| Show/Hide Whiteboard                    | <kbd>CMD/CTRL + E</kbd> | In-app shortcut |
-| Clear Desk                              | <kbd>CMD/CTRL + K</kbd> | In-app shortcut |
-| Settings Page                           | <kbd>CMD/CTRL + ,</kbd> | |
-| Reset to original                       | | Resets all app settings <br /> (keys, colors, toolbar position, etc.)  |
+| Command                                    | Keybindings                                              | Comment           |
+| ------------------------------------------ | -------------------------------------------------------- | ----------------- |
+| Enable Draw/Pointer Mode                   | <kbd>CMD/CTRL + SHIFT + A</kbd>                          | Global shortcut   |
+| Activate Brush                             | <kbd>B</kbd> or <kbd>1</kbd>                             |                   |
+| Activate Pen (Fade Pen)                    | <kbd>P</kbd>                                             |                   |
+| Activate/Switch Shapes (Arrow/Square/etc.) | <kbd>A</kbd>, <kbd>R</kbd>, <kbd>O</kbd> or <kbd>2</kbd> |                   |
+| Activate Text                              | <kbd>T</kbd> or <kbd>3</kbd>                             |                   |
+| Activate Highlighter                       | <kbd>H</kbd> or <kbd>4</kbd>                             |                   |
+| Activate Laser                             | <kbd>L</kbd> or <kbd>5</kbd>                             |                   |
+| Activate Eraser                            | <kbd>E</kbd> or <kbd>6</kbd>                             |                   |
+| Switch Color                               | <kbd>7</kbd>                                             |                   |
+| Switch Thickness (Width)                   | <kbd>8</kbd>                                             |                   |
+| Show/Hide ToolBar                          | <kbd>CMD/CTRL + T</kbd>                                  | In-app shortcut   |
+| Show/Hide Whiteboard                       | <kbd>CMD/CTRL + E</kbd>                                  | In-app shortcut   |
+| Clear Desk                                 | <kbd>CMD/CTRL + K</kbd>                                  | In-app shortcut   |
+| Settings Page                              | <kbd>CMD/CTRL + ,</kbd>                                  |                   |
 
 ### Contributing
 

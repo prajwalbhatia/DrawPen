@@ -36,21 +36,21 @@ import {
   moveToCoordinates,
   calculateAspectRatio,
 } from './utils/figureDetection.js';
-import { FaPaintBrush, FaHighlighter, FaRegSquare, FaRegCircle, FaArrowRight, FaLongArrowAltRight, FaEraser, FaRegTrashAlt, FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { FaPaintBrush, FaPencilAlt, FaHighlighter, FaRegSquare, FaRegCircle, FaArrowRight, FaLongArrowAltRight, FaEraser, FaRegTrashAlt, FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import { AiOutlineLine } from "react-icons/ai";
 import { GiLaserburn } from "react-icons/gi";
 import { MdOutlineClose } from "react-icons/md";
 import { FaFont } from "react-icons/fa6";
 import { LuSquareMousePointer } from "react-icons/lu";
-import FaMagicPaintBrush from "./components/icons/FaMagicPaintBrush.js";
+import FaMagicPencilAlt from "./components/icons/FaMagicPencilAlt.js";
 import FaRegDiamond from "./components/icons/FaRegDiamond.js";
 
 import {
   fadeOutDestroyAfterMs,
   eraserTime,
-  brushList,
-  shapeList,
   penVariantList,
+  drawingToolList,
+  shapeList,
   arrowVariantList,
   createApplicationColorList,
   widthList,
@@ -65,7 +65,8 @@ const Icons = {
   DrawModeEnabled: LuSquareMousePointer,
   Close: MdOutlineClose,
   Brush: FaPaintBrush,
-  MagicBrush: FaMagicPaintBrush,
+  Pen: FaPencilAlt,
+  MagicPen: FaMagicPencilAlt,
   Arrow: FaArrowRight,
   FlatArrow: FaLongArrowAltRight,
   Rectangle: FaRegSquare,
@@ -98,7 +99,6 @@ const Application = (settings) => {
   const initialShowDrawingBorder = settings.show_drawing_border
   const initialCuteCursorMode = settings.cute_cursor_mode
   const initialPenSmoothing = settings.pen_smoothing
-  const initialPenStrokeWidthFixed = settings.pen_stroke_width_fixed
   const initialClearDrawingsOnHide = settings.clear_drawings_on_hide
   const initialToolbarDefaultBrush = settings.tool_bar_default_brush
   const initialToolbarDefaultFigure = settings.tool_bar_default_figure
@@ -169,7 +169,6 @@ const Application = (settings) => {
   const [cuteCursorMode, setCuteCursorMode] = useState(initialCuteCursorMode);
   const [isDocumentVisible, setIsDocumentVisible] = useState(true);
   const [penSmoothing, setPenSmoothing] = useState(initialPenSmoothing);
-  const [penStrokeWidthFixed, setPenStrokeWidthFixed] = useState(initialPenStrokeWidthFixed);
   const [clearDrawingsOnHide, setClearDrawingsOnHide] = useState(initialClearDrawingsOnHide);
   const [mainColorIndex, setMainColorIndex] = useState(initialMainColorIndex);
   const [secondaryColorIndex, setSecondaryColorIndex] = useState(initialSecondaryColorIndex);
@@ -404,6 +403,10 @@ const Application = (settings) => {
         }
         break;
       }
+      case 'b': {
+        handleChangeTool('brush');
+        break;
+      }
       case 'p': {
         if (penVariantList.includes(activeTool)) {
           handleChangeTool(getNextVariant(penVariantList, activeTool));
@@ -530,7 +533,7 @@ const Application = (settings) => {
           let nextBrush = toolbarLastActiveBrush;
 
           if (activeTool === toolbarLastActiveBrush) {
-            nextBrush = getNextVariant(brushList, activeTool, direction);
+            nextBrush = getNextVariant(drawingToolList, activeTool, direction);
           }
 
           handleChangeTool(nextBrush);
@@ -596,8 +599,8 @@ const Application = (settings) => {
 
     switch (toolbarSlide) {
       case 'brush-slide': {
-        if (digitIndex < brushList.length) {
-          handleChangeTool(brushList[digitIndex]);
+        if (digitIndex < drawingToolList.length) {
+          handleChangeTool(drawingToolList[digitIndex]);
           setToolbarSlide("main-slide");
         }
         break;
@@ -956,7 +959,7 @@ const Application = (settings) => {
     setActiveFigureInfo(null);
     setActiveTool(toolName);
 
-    if (brushList.includes(toolName)) {
+    if (drawingToolList.includes(toolName)) {
       setToolbarLastActiveBrush(toolName);
     }
 
@@ -1071,7 +1074,7 @@ const Application = (settings) => {
       setActiveHoveredDotName(null);
     }
 
-    if ([...brushList, ...shapeList, 'text'].includes(activeTool)) {
+    if ([...drawingToolList, ...shapeList, 'text'].includes(activeTool)) {
       const selectedFigure = getFigureAtMousePosition(x, y);
 
       if (selectedFigure) {
@@ -1193,7 +1196,7 @@ const Application = (settings) => {
     }
 
     // Click on the figure
-    if ([...brushList, ...shapeList, 'text'].includes(activeTool)) {
+    if ([...drawingToolList, ...shapeList, 'text'].includes(activeTool)) {
       const selectedFigure = getFigureAtMousePosition(x, y);
 
       if (selectedFigure) {
@@ -1327,7 +1330,7 @@ const Application = (settings) => {
         return;
       }
 
-      if (['pen', 'highlighter'].includes(activeTool)) {
+      if (['brush', 'pen', 'highlighter'].includes(activeTool)) {
         const currentFigure = allFigures[allFigures.length - 1];
 
         currentFigure.points = [...currentFigure.points, [x, y]];
@@ -1427,7 +1430,7 @@ const Application = (settings) => {
         setIsFadeDrawing(false);
       }
 
-      if (activeTool === 'pen') {
+      if (['brush', 'pen'].includes(activeTool)) {
         const currentFigure = allFigures.at(-1);
 
         if (penSmoothing && !colorList[currentFigure.colorIndex].isRainbow) {
@@ -1693,7 +1696,6 @@ const Application = (settings) => {
     setShowDrawingBorder(newSettings.show_drawing_border);
     setCuteCursorMode(newSettings.cute_cursor_mode);
     setPenSmoothing(newSettings.pen_smoothing);
-    setPenStrokeWidthFixed(newSettings.pen_stroke_width_fixed);
     setClearDrawingsOnHide(newSettings.clear_drawings_on_hide);
     setMainColorIndex(newSettings.swap_colors_indexes[0]);
     setSecondaryColorIndex(newSettings.swap_colors_indexes[1]);
@@ -1964,7 +1966,6 @@ const Application = (settings) => {
             colorList={colorList}
             rainbowColorDeg={rainbowColorDeg}
             cuteCursorMode={cuteCursorMode}
-            penStrokeWidthFixed={penStrokeWidthFixed}
           />
       }
 
@@ -1984,7 +1985,6 @@ const Application = (settings) => {
         activeTool={activeTool}
         handleChangeTool={handleChangeTool}
         colorList={colorList}
-        penStrokeWidthFixed={penStrokeWidthFixed}
       />
 
       {

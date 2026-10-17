@@ -41,7 +41,6 @@ const DrawDesk = ({
   activeTool,
   handleChangeTool,
   colorList,
-  penStrokeWidthFixed,
 }) => {
 
   const canvasRef = useRef(null);
@@ -81,18 +80,18 @@ const DrawDesk = ({
 
   useEffect(() => {
     draw(allFigures, allFadeFigures, allLaserFigures, allEraserFigures, activeFigureInfo, fadeOpacity, offscreenCanvasRef.current);
-  }, [allFigures, allFadeFigures, allLaserFigures, allEraserFigures, activeFigureInfo, fadeOpacity, colorList, penStrokeWidthFixed]);
+  }, [allFigures, allFadeFigures, allLaserFigures, allEraserFigures, activeFigureInfo, fadeOpacity, colorList]);
 
   const draw = (allFigures, allFadeFigures, allLaserFigures, allEraserFigures, activeFigureInfo, fadeOpacity, offscreenCanvas) => {
     const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
     allFigures.forEach((figure) => {
-      if (figure.type === 'pen') {
+      if (['brush', 'pen'].includes(figure.type)) {
         if (colorList[figure.colorIndex].isRainbow) {
           drawRainbowPen(ctx, offscreenCanvas, figure, updateRainbowColorDeg)
         } else {
-          drawPen(ctx, figure, colorList, { penStrokeWidthFixed })
+          drawPen(ctx, figure, colorList)
         }
       }
 
@@ -170,7 +169,7 @@ const DrawDesk = ({
         if (colorList[figure.colorIndex].isRainbow) {
           drawRainbowPen(ctx, offscreenCanvas, figure, updateRainbowColorDeg, fadeOpacity)
         } else {
-          drawPen(ctx, figure, colorList, { fadeOpacity, penStrokeWidthFixed })
+          drawPen(ctx, figure, colorList, { fadeOpacity })
         }
       }
     })

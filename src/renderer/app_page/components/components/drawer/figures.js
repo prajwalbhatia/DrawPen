@@ -12,6 +12,7 @@ import {
 } from '../../utils/general.js';
 import {
   widthList,
+  penVariantList,
   rainbowScaleFactor,
   dotRadius,
   dotStrokeWidth,
@@ -153,7 +154,7 @@ export const getCursorColor = (colorList, colorIndex, rainbowColorDeg) => {
 
 export const drawPen = (ctx, figure, colorList, options = {}) => {
   const { points, colorIndex, widthIndex } = figure;
-  const { fadeOpacity = 1, penStrokeWidthFixed = false } = options;
+  const { fadeOpacity = 1 } = options;
 
   const colorInfo = colorList[colorIndex]
   const widthInfo = widthList[widthIndex]
@@ -170,8 +171,8 @@ export const drawPen = (ctx, figure, colorList, options = {}) => {
     size: widthInfo.pen_pressure_width
   };
 
-  if (penStrokeWidthFixed) {
-    strokeOptions.size = widthInfo.pen_fixed_width; // Trick to keep the pen size consistent
+  if (penVariantList.includes(figure.type)) {
+    strokeOptions.size = widthInfo.pen_fixed_width;
     strokeOptions.simulatePressure = false;
     strokeOptions.thinning = 0.0;
   }

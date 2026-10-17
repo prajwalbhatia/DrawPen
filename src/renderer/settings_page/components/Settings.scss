@@ -109,14 +109,14 @@ html, body {
 
     .settings-container-wrapper {
       flex: 1;
-      overflow-y: auto;
+      min-width: 0;
+      padding: var(--space-lg) 20px var(--space-lg) var(--space-lg);
 
       .settings-container {
         display: flex;
         flex-direction: column;
+        height: 100%;
         box-sizing: border-box;
-        overflow-y: auto;
-        margin: 10px 20px 10px 10px;
 
         .settings-header {
           margin-top: var(--space-lg);
@@ -158,6 +158,8 @@ html, body {
 
               .settings-item-info {
                 flex: 1;
+                min-width: 0;
+                padding-right: var(--space-lg);
 
                 .settings-item-title {
                   font-size: 13px;

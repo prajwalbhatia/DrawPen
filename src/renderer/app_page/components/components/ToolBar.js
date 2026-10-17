@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import "./ToolBar.scss";
-import { brushList, shapeList, widthList, shortcutHintHoldDelayMs, toolbarViewportMargin, updateStoreDelay } from "../constants.js";
+import { drawingToolList, shapeList, widthList, shortcutHintHoldDelayMs, toolbarViewportMargin, updateStoreDelay } from "../constants.js";
 
 const STICKY_DISTANCE = 15;
 
@@ -47,8 +47,9 @@ const ToolBar = ({
   colorList,
 }) => {
   const toolConfig = {
-    pen:         { title: "Pen",         alias: "P", mainPanel: "1", subPanel: "1" },
-    fadepen:     { title: "Fade Pen",    alias: "P", mainPanel: "1", subPanel: "2" },
+    brush:       { title: "Brush",       alias: "B", mainPanel: "1", subPanel: "1" },
+    pen:         { title: "Pen",         alias: "P", mainPanel: "1", subPanel: "2" },
+    fadepen:     { title: "Fade Pen",    alias: "P", mainPanel: "1", subPanel: "3" },
     arrow:       { title: "Arrow",       alias: "A", mainPanel: "2", subPanel: "1" },
     flat_arrow:  { title: "Flat Arrow",  alias: "A", mainPanel: "2", subPanel: "2" },
     rectangle:   { title: "Rectangle",   alias: "R", mainPanel: "2", subPanel: "3" },
@@ -65,8 +66,9 @@ const ToolBar = ({
   };
 
   const allIcons = {
-    pen: <Icons.Brush />,
-    fadepen: <Icons.MagicBrush />,
+    brush: <Icons.Brush />,
+    pen: <Icons.Pen />,
+    fadepen: <Icons.MagicPen />,
     arrow: <Icons.Arrow />,
     flat_arrow: <Icons.FlatArrow />,
     rectangle: <Icons.Rectangle />,
@@ -340,7 +342,7 @@ const ToolBar = ({
   };
 
   const pickBrushOrSwitchView = () => {
-    if (brushList.includes(activeTool)) {
+    if (drawingToolList.includes(activeTool)) {
       setToolbarSlide("brush-slide");
     } else {
       pickTool(lastActiveBrush);
@@ -406,7 +408,7 @@ const ToolBar = ({
           <div className="toolbar__panel toolbar__panel--full">
             <div className="toolbar__body">
               <ul className="toolbar__items">
-                <li className={brushList.includes(activeTool) ? "active more_figures" : undefined} onClick={() => pickBrushOrSwitchView()}>
+                <li className={drawingToolList.includes(activeTool) ? "active more_figures" : undefined} onClick={() => pickBrushOrSwitchView()}>
                   <button tabIndex={-1} title={renderToolTitle(lastActiveBrush, "mainPanel")}>
                     {allIcons[lastActiveBrush]}
                   </button>
@@ -471,15 +473,21 @@ const ToolBar = ({
 
           <div className="side-view-body brush-group">
             <ul className="toolbar__items">
+              <li className={activeTool === "brush" ? "active" : undefined} onClick={() => pickTool("brush")}>
+                <button tabIndex={-1} title={renderToolTitle("brush", "subPanel")}>
+                  <Icons.Brush />
+                </button>
+                <div className="toolbar__shortcut-hint">{renderToolShortcutHint("brush", "subPanel")}</div>
+              </li>
               <li className={activeTool === "pen" ? "active" : undefined} onClick={() => pickTool("pen")}>
                 <button tabIndex={-1} title={renderToolTitle("pen", "subPanel")}>
-                  <Icons.Brush />
+                  <Icons.Pen />
                 </button>
                 <div className="toolbar__shortcut-hint">{renderToolShortcutHint("pen", "subPanel")}</div>
               </li>
               <li className={activeTool === "fadepen" ? "active" : undefined} onClick={() => pickTool("fadepen")}>
                 <button tabIndex={-1} title={renderToolTitle("fadepen", "subPanel")}>
-                  <Icons.MagicBrush />
+                  <Icons.MagicPen />
                 </button>
                 <div className="toolbar__shortcut-hint">{renderToolShortcutHint("fadepen", "subPanel")}</div>
               </li>

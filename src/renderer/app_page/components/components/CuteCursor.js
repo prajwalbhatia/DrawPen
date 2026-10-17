@@ -5,7 +5,8 @@ import {
   highlighterAlpha,
   shapeList,
   widthList,
-  brushList,
+  drawingToolList,
+  penVariantList,
 } from "../constants.js";
 import { getCursorColor } from "./drawer/figures.js";
 
@@ -18,7 +19,6 @@ const CuteCursor = ({
   colorList,
   rainbowColorDeg,
   cuteCursorMode,
-  penStrokeWidthFixed,
 }) => {
   if (mouseCoordinates.x === 0 && mouseCoordinates.y === 0) {
     return null;
@@ -31,8 +31,8 @@ const CuteCursor = ({
     if (activeTool === 'laser') return widthInfo.laser_width[1];
     if (activeTool === 'eraser') return widthInfo.pen_fixed_width;
     if (shapeList.includes(activeTool)) return widthInfo.figure_width;
-    if (brushList.includes(activeTool) && colorList[activeColorIndex].isRainbow) return widthInfo.pen_fixed_width;
-    if (brushList.includes(activeTool) && penStrokeWidthFixed) return widthInfo.pen_fixed_width;
+    if (penVariantList.includes(activeTool)) return widthInfo.pen_fixed_width;
+    if (drawingToolList.includes(activeTool) && colorList[activeColorIndex].isRainbow) return widthInfo.pen_fixed_width;
 
     return widthInfo.pen_pressure_width;
   };
@@ -76,14 +76,12 @@ const CuteCursor = ({
     }
 
     switch (toolName) {
-      case "eraser":
-        return <Icons.Eraser {...monochromeIconProps} />
-      case "laser":
-        return <Icons.Laser {...monochromeIconProps} />
-      case "pen":
+      case "brush":
         return <Icons.Brush {...iconProps} />
+      case "pen":
+        return <Icons.Pen {...iconProps} />
       case "fadepen":
-        return <Icons.MagicBrush {...iconProps} />
+        return <Icons.MagicPen {...iconProps} />
       case "arrow":
         return <Icons.Arrow {...iconProps} />
       case "flat_arrow":
@@ -100,6 +98,10 @@ const CuteCursor = ({
         return <Icons.Text {...iconProps} />;
       case "highlighter":
         return <Icons.Highlighter {...iconProps} />
+      case "laser":
+        return <Icons.Laser {...monochromeIconProps} />
+      case "eraser":
+        return <Icons.Eraser {...monochromeIconProps} />
       default:
         return null
     }

@@ -33,9 +33,10 @@ export const initialZoomIndex = 3;
 export const palmMinContactLength = 35; // Min touch contact length to detect a palm/fist
 export const palmMinContactArea = 2000;
 
-export const brushList = ['pen', 'fadepen'];
-export const shapeList = ['arrow', 'flat_arrow', 'rectangle', 'diamond', 'oval', 'line'];
+export const drawingToolList = ['brush', 'pen', 'fadepen'];
 export const penVariantList = ['pen', 'fadepen'];
+
+export const shapeList = ['arrow', 'flat_arrow', 'rectangle', 'diamond', 'oval', 'line'];
 export const arrowVariantList = ['arrow', 'flat_arrow'];
 
 export const dotRadius = 5;
