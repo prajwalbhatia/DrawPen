@@ -140,26 +140,6 @@ const FigureToolbar = ({
     setOpenMenu((currentMenu) => currentMenu === menuName ? null : menuName);
   };
 
-  const applyColor = (colorIndex) => {
-    onChangeColor(colorIndex);
-    setOpenMenu(null);
-  };
-
-  const applyWidth = (widthIndex) => {
-    onChangeWidth(widthIndex);
-    setOpenMenu(null);
-  };
-
-  const applyStroke = (strokeIndex) => {
-    onChangeStroke(strokeIndex);
-    setOpenMenu(null);
-  };
-
-  const applyEdges = (edgeIndex) => {
-    onChangeEdges(edgeIndex);
-    setOpenMenu(null);
-  };
-
   const renderColorSubmenu = () => {
     return (
       <div className="figure-sub-toolbar">
@@ -170,7 +150,7 @@ const FigureToolbar = ({
               className={`toolbar__color-picker ${color.isRainbow ? 'color-rainbow' : ''}`}
               style={{ '--picker-color': color.color }}
               title={color.title}
-              onClick={() => applyColor(index)}
+              onClick={() => onChangeColor(index)}
             />
           </div>
         ))}
@@ -187,7 +167,7 @@ const FigureToolbar = ({
               tabIndex={-1}
               className={`toolbar__width-picker ${width.name}`}
               title={width.title}
-              onClick={() => applyWidth(index)}
+              onClick={() => onChangeWidth(index)}
             >
               <div />
             </button>
@@ -201,13 +181,13 @@ const FigureToolbar = ({
     return (
       <div className="figure-sub-toolbar">
         <div className="figure-sub-item">
-          <button tabIndex={-1} title="Sharp" onClick={() => applyEdges(0)}>
+          <button tabIndex={-1} title="Sharp" onClick={() => onChangeEdges(0)}>
             <MdSharpCorner />
           </button>
         </div>
 
         <div className="figure-sub-item">
-          <button tabIndex={-1} title="Round" onClick={() => applyEdges(1)}>
+          <button tabIndex={-1} title="Round" onClick={() => onChangeEdges(1)}>
             <MdRoundedCorner />
           </button>
         </div>
@@ -219,19 +199,19 @@ const FigureToolbar = ({
     return (
       <div className="figure-sub-toolbar">
         <div className="figure-sub-item">
-          <button tabIndex={-1} title="Solid" onClick={() => applyStroke(0)}>
+          <button tabIndex={-1} title="Solid" onClick={() => onChangeStroke(0)}>
             <TbMinus />
           </button>
         </div>
 
         <div className="figure-sub-item">
-          <button tabIndex={-1} title="Dashed" onClick={() => applyStroke(1)}>
+          <button tabIndex={-1} title="Dashed" onClick={() => onChangeStroke(1)}>
             <TbLineDashed />
           </button>
         </div>
 
         <div className="figure-sub-item">
-          <button tabIndex={-1} title="Dotted" onClick={() => applyStroke(2)}>
+          <button tabIndex={-1} title="Dotted" onClick={() => onChangeStroke(2)}>
             <TbLineDotted />
           </button>
         </div>

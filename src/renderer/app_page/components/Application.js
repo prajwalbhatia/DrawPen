@@ -499,13 +499,13 @@ const Application = (settings) => {
       case 'escape': {
         if (eventRepeat) break;
 
-        if (toolbarSlide !== 'main-slide') {
-          setToolbarSlide('main-slide');
+        if (activeFigureInfo) {
+          setActiveFigureInfo(null);
           break;
         }
 
-        if (activeFigureInfo) {
-          setActiveFigureInfo(null);
+        if (toolbarSlide !== 'main-slide') {
+          setToolbarSlide('main-slide');
           break;
         }
 

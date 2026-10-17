@@ -91,7 +91,7 @@ const schema = {
   },
   tool_bar_active_tool: {
     type: 'string',
-    default: 'pen'
+    default: 'brush'
   },
   tool_bar_active_color_index: {
     type: 'number',
@@ -110,11 +110,11 @@ const schema = {
   },
   tool_bar_active_weight_index: {
     type: 'number',
-    default: 1
+    default: 2
   },
   tool_bar_default_brush: {
     type: 'string',
-    default: 'pen'
+    default: 'brush'
   },
   tool_bar_default_figure: {
     type: 'string',
