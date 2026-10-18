@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.0.60] - 2026-10-18
+### Features:
+- Added a separate Pen tool with fixed stroke width (removed the "Fixed Stroke Width" setting)
+- Added Horizontal and Vertical toolbar orientations in Application Settings
+- Added Extra Bold thickness
+
+### Improvements:
+- Adjusted Cute Cursor position
+- Kept figure toolbar submenus open when changing colors, widths, and styles
+
+### Bug Fixes:
+- Fixed Settings layout for long screenshot directory paths
+
 ## [0.0.59] - 2026-10-11
 ### Features:
 - Added Zoom Mode (Beta) via the Tray and CMD/CTRL+SHIFT+M
